@@ -1,0 +1,1655 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "DataFlows SMS API",
+    "version": "1.0.0",
+    "description": "Send SMS, check delivery and manage contacts.\n\n**Log in** with your API token as a Bearer header. Find it in your account under Developers.\n\n**Send JSON** with `Content-Type: application/json`. Form posts also work.\n\n**Check the `status` field.** Many errors answer HTTP 200 with `\"status\": \"error\"`, so the HTTP code alone isn't enough.\n\n**Limit:** 600 requests per minute per token. Past that, the API answers HTTP 429.",
+    "contact": {
+      "name": "DataFlows Support",
+      "email": "support@dataflows.com.au",
+      "url": "https://dataflows.com.au/developers"
+    },
+    "termsOfService": "https://dataflows.com.au/terms-of-use"
+  },
+  "externalDocs": {
+    "description": "Full guides",
+    "url": "https://docs.dataflows.com.au/"
+  },
+  "servers": [
+    {
+      "url": "https://sms.dataflows.com.au/api/http"
+    }
+  ],
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "tags": [
+    {
+      "name": "Account"
+    },
+    {
+      "name": "SMS"
+    },
+    {
+      "name": "Contact groups"
+    },
+    {
+      "name": "Contacts"
+    }
+  ],
+  "paths": {
+    "/me": {
+      "get": {
+        "operationId": "getProfile",
+        "tags": [
+          "Account"
+        ],
+        "summary": "View your profile",
+        "responses": {
+          "200": {
+            "description": "Your profile. Most errors also answer HTTP 200, so check the `status` field.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ProfileResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          }
+        }
+      }
+    },
+    "/balance": {
+      "get": {
+        "operationId": "getBalance",
+        "tags": [
+          "Account"
+        ],
+        "summary": "Check your credit balance",
+        "responses": {
+          "200": {
+            "description": "Your balance. Most errors also answer HTTP 200, so check the `status` field.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/BalanceResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          }
+        }
+      }
+    },
+    "/sender-ids": {
+      "get": {
+        "operationId": "listSenderIds",
+        "tags": [
+          "Account"
+        ],
+        "summary": "List your sender IDs",
+        "description": "This one answers `{\"value\": [...]}` with no `status` field when it succeeds.",
+        "responses": {
+          "200": {
+            "description": "Your active sender IDs. Most errors also answer HTTP 200, so check the `status` field.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/SenderIds"
+                    },
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          }
+        }
+      }
+    },
+    "/sms/send": {
+      "post": {
+        "operationId": "sendSms",
+        "tags": [
+          "SMS"
+        ],
+        "summary": "Send an SMS",
+        "description": "One number is queued and returns a single result in `data`. Several numbers are sent during the request and return a list with one entry per number. Trial accounts can only send to numbers they have verified.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "recipient",
+                  "sender_id",
+                  "message"
+                ],
+                "properties": {
+                  "recipient": {
+                    "type": "string",
+                    "description": "One number in international format, or several separated by commas.",
+                    "example": "61404235133"
+                  },
+                  "sender_id": {
+                    "type": "string",
+                    "description": "One of your active sender IDs or numbers. See `GET /sender-ids`.",
+                    "example": "YOUR_SENDER_ID"
+                  },
+                  "message": {
+                    "type": "string",
+                    "example": "Hello from DataFlows"
+                  },
+                  "schedule_time": {
+                    "type": "string",
+                    "description": "Send later, as `Y-m-d H:i` in your account's timezone. Leave it out to send now.",
+                    "example": "2030-01-31 09:00"
+                  }
+                }
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "recipient",
+                  "sender_id",
+                  "message"
+                ],
+                "properties": {
+                  "recipient": {
+                    "type": "string",
+                    "description": "One number in international format, or several separated by commas.",
+                    "example": "61404235133"
+                  },
+                  "sender_id": {
+                    "type": "string",
+                    "description": "One of your active sender IDs or numbers. See `GET /sender-ids`.",
+                    "example": "YOUR_SENDER_ID"
+                  },
+                  "message": {
+                    "type": "string",
+                    "example": "Hello from DataFlows"
+                  },
+                  "schedule_time": {
+                    "type": "string",
+                    "description": "Send later, as `Y-m-d H:i` in your account's timezone. Leave it out to send now.",
+                    "example": "2030-01-31 09:00"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The message was accepted. Most errors also answer HTTP 200, so check the `status` field.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/SendResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The sender ID isn't one you can use, or another send check failed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          }
+        }
+      }
+    },
+    "/sms": {
+      "get": {
+        "operationId": "listMessages",
+        "tags": [
+          "SMS"
+        ],
+        "summary": "List sent messages",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "description": "Page number, starting at 1.",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "Results per page, up to 100.",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A page of messages, newest first. Most errors also answer HTTP 200, so check the `status` field.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/MessagePage"
+                    },
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          }
+        }
+      }
+    },
+    "/sms/{uid}": {
+      "get": {
+        "operationId": "getMessage",
+        "tags": [
+          "SMS"
+        ],
+        "summary": "View a message",
+        "parameters": [
+          {
+            "name": "uid",
+            "in": "path",
+            "required": true,
+            "description": "The message's uid, from `GET /sms`.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The message. Most errors also answer HTTP 200, so check the `status` field.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/MessageResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          }
+        }
+      }
+    },
+    "/contacts": {
+      "get": {
+        "operationId": "listGroups",
+        "tags": [
+          "Contact groups"
+        ],
+        "summary": "List contact groups",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "description": "Page number, starting at 1.",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A page of your groups. Most errors also answer HTTP 200, so check the `status` field.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/GroupPage"
+                    },
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          }
+        }
+      },
+      "post": {
+        "operationId": "createGroup",
+        "tags": [
+          "Contact groups"
+        ],
+        "summary": "Create a contact group",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Must be unique on your account.",
+                    "example": "Newsletter"
+                  }
+                }
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Must be unique on your account.",
+                    "example": "Newsletter"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The new group. Most errors also answer HTTP 200, so check the `status` field.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/GroupResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          }
+        }
+      }
+    },
+    "/contacts/{group_uid}": {
+      "parameters": [
+        {
+          "name": "group_uid",
+          "in": "path",
+          "required": true,
+          "description": "The contact group's uid.",
+          "schema": {
+            "type": "string"
+          },
+          "example": "GROUP_UID"
+        }
+      ],
+      "patch": {
+        "operationId": "updateGroup",
+        "tags": [
+          "Contact groups"
+        ],
+        "summary": "Rename a contact group",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Must be unique on your account.",
+                    "example": "Newsletter"
+                  }
+                }
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Must be unique on your account.",
+                    "example": "Newsletter"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The updated group. Most errors also answer HTTP 200, so check the `status` field.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/GroupResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteGroup",
+        "tags": [
+          "Contact groups"
+        ],
+        "summary": "Delete a contact group",
+        "description": "Also deletes every contact in the group.",
+        "responses": {
+          "200": {
+            "description": "The group was deleted. Most errors also answer HTTP 200, so check the `status` field.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/EmptyResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          }
+        }
+      }
+    },
+    "/contacts/{group_uid}/show": {
+      "parameters": [
+        {
+          "name": "group_uid",
+          "in": "path",
+          "required": true,
+          "description": "The contact group's uid.",
+          "schema": {
+            "type": "string"
+          },
+          "example": "GROUP_UID"
+        }
+      ],
+      "post": {
+        "operationId": "getGroup",
+        "tags": [
+          "Contact groups"
+        ],
+        "summary": "View a contact group",
+        "responses": {
+          "200": {
+            "description": "The group. Most errors also answer HTTP 200, so check the `status` field.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/GroupResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          }
+        }
+      }
+    },
+    "/contacts/{group_uid}/all": {
+      "parameters": [
+        {
+          "name": "group_uid",
+          "in": "path",
+          "required": true,
+          "description": "The contact group's uid.",
+          "schema": {
+            "type": "string"
+          },
+          "example": "GROUP_UID"
+        }
+      ],
+      "post": {
+        "operationId": "listContacts",
+        "tags": [
+          "Contacts"
+        ],
+        "summary": "List the contacts in a group",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "description": "Page number, starting at 1.",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A page of contacts, 25 at a time. Most errors also answer HTTP 200, so check the `status` field.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ContactPage"
+                    },
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          }
+        }
+      }
+    },
+    "/contacts/{group_uid}/store": {
+      "parameters": [
+        {
+          "name": "group_uid",
+          "in": "path",
+          "required": true,
+          "description": "The contact group's uid.",
+          "schema": {
+            "type": "string"
+          },
+          "example": "GROUP_UID"
+        }
+      ],
+      "post": {
+        "operationId": "createContact",
+        "tags": [
+          "Contacts"
+        ],
+        "summary": "Add a contact",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/ContactInput"
+                  },
+                  {
+                    "required": [
+                      "PHONE"
+                    ]
+                  }
+                ]
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/ContactInput"
+                  },
+                  {
+                    "required": [
+                      "PHONE"
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The new contact. Most errors also answer HTTP 200, so check the `status` field.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ContactResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationFailed"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          }
+        }
+      }
+    },
+    "/contacts/{group_uid}/search/{contact_uid}": {
+      "parameters": [
+        {
+          "name": "group_uid",
+          "in": "path",
+          "required": true,
+          "description": "The contact group's uid.",
+          "schema": {
+            "type": "string"
+          },
+          "example": "GROUP_UID"
+        },
+        {
+          "name": "contact_uid",
+          "in": "path",
+          "required": true,
+          "description": "The contact's uid.",
+          "schema": {
+            "type": "string"
+          },
+          "example": "CONTACT_UID"
+        }
+      ],
+      "post": {
+        "operationId": "getContact",
+        "tags": [
+          "Contacts"
+        ],
+        "summary": "View a contact",
+        "responses": {
+          "200": {
+            "description": "The contact. Most errors also answer HTTP 200, so check the `status` field.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ContactResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          }
+        }
+      }
+    },
+    "/contacts/{group_uid}/update/{contact_uid}": {
+      "parameters": [
+        {
+          "name": "group_uid",
+          "in": "path",
+          "required": true,
+          "description": "The contact group's uid.",
+          "schema": {
+            "type": "string"
+          },
+          "example": "GROUP_UID"
+        },
+        {
+          "name": "contact_uid",
+          "in": "path",
+          "required": true,
+          "description": "The contact's uid.",
+          "schema": {
+            "type": "string"
+          },
+          "example": "CONTACT_UID"
+        }
+      ],
+      "patch": {
+        "operationId": "updateContact",
+        "tags": [
+          "Contacts"
+        ],
+        "summary": "Update a contact",
+        "description": "Send the fields to change. Fields you leave out keep their values.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContactInput"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/ContactInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The updated contact. Most errors also answer HTTP 200, so check the `status` field.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ContactResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationFailed"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          }
+        }
+      }
+    },
+    "/contacts/{group_uid}/delete/{contact_uid}": {
+      "parameters": [
+        {
+          "name": "group_uid",
+          "in": "path",
+          "required": true,
+          "description": "The contact group's uid.",
+          "schema": {
+            "type": "string"
+          },
+          "example": "GROUP_UID"
+        },
+        {
+          "name": "contact_uid",
+          "in": "path",
+          "required": true,
+          "description": "The contact's uid.",
+          "schema": {
+            "type": "string"
+          },
+          "example": "CONTACT_UID"
+        }
+      ],
+      "delete": {
+        "operationId": "deleteContact",
+        "tags": [
+          "Contacts"
+        ],
+        "summary": "Delete a contact",
+        "responses": {
+          "200": {
+            "description": "The contact was deleted. Most errors also answer HTTP 200, so check the `status` field.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/EmptyResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "Your API token."
+      }
+    },
+    "responses": {
+      "Forbidden": {
+        "description": "Your account doesn't have API access, or is disabled.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "Not found. Records belonging to another account also answer this.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "ValidationFailed": {
+        "description": "A field is missing or invalid.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string"
+                },
+                "errors": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "TooManyRequests": {
+        "description": "More than 600 requests in a minute with this token.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "Success": {
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "success"
+            ]
+          },
+          "message": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "required": [
+          "status",
+          "message"
+        ],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "error"
+            ]
+          },
+          "message": {
+            "type": "string",
+            "example": "These credentials do not match our records."
+          }
+        }
+      },
+      "Pagination": {
+        "type": "object",
+        "required": [
+          "current_page",
+          "last_page",
+          "per_page",
+          "total"
+        ],
+        "properties": {
+          "current_page": {
+            "type": "integer"
+          },
+          "first_page_url": {
+            "type": "string"
+          },
+          "from": {
+            "type": "integer",
+            "nullable": true
+          },
+          "last_page": {
+            "type": "integer"
+          },
+          "last_page_url": {
+            "type": "string"
+          },
+          "links": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "url": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "label": {
+                  "type": "string"
+                },
+                "active": {
+                  "type": "boolean"
+                }
+              }
+            }
+          },
+          "next_page_url": {
+            "type": "string",
+            "nullable": true
+          },
+          "path": {
+            "type": "string"
+          },
+          "per_page": {
+            "type": "integer"
+          },
+          "prev_page_url": {
+            "type": "string",
+            "nullable": true
+          },
+          "to": {
+            "type": "integer",
+            "nullable": true
+          },
+          "total": {
+            "type": "integer"
+          }
+        }
+      },
+      "Profile": {
+        "type": "object",
+        "required": [
+          "uid",
+          "email"
+        ],
+        "properties": {
+          "uid": {
+            "type": "string"
+          },
+          "api_token": {
+            "type": "string"
+          },
+          "first_name": {
+            "type": "string",
+            "nullable": true
+          },
+          "last_name": {
+            "type": "string",
+            "nullable": true
+          },
+          "email": {
+            "type": "string"
+          },
+          "locale": {
+            "type": "string"
+          },
+          "timezone": {
+            "type": "string"
+          },
+          "last_access_at": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "Balance": {
+        "type": "object",
+        "required": [
+          "remaining_balance",
+          "expired_on"
+        ],
+        "properties": {
+          "remaining_balance": {
+            "type": "string",
+            "description": "Credits left, formatted for display."
+          },
+          "expired_on": {
+            "type": "string",
+            "description": "When the current plan period ends, formatted for display in the account's timezone."
+          }
+        }
+      },
+      "SenderIds": {
+        "type": "object",
+        "required": [
+          "value"
+        ],
+        "properties": {
+          "value": {
+            "type": "array",
+            "description": "Active sender IDs on the account.",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "SendResult": {
+        "type": "object",
+        "required": [
+          "campaign_id"
+        ],
+        "properties": {
+          "campaign_id": {
+            "type": "string",
+            "description": "Identifier for this send."
+          },
+          "recipient": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "cost": {
+            "type": "number",
+            "description": "Credits used."
+          },
+          "sms_count": {
+            "type": "integer",
+            "description": "How many SMS parts the message takes."
+          },
+          "status": {
+            "type": "string",
+            "description": "The message has been accepted and queued. Use the sent messages endpoints for its later status."
+          }
+        }
+      },
+      "Message": {
+        "type": "object",
+        "required": [
+          "uid",
+          "to"
+        ],
+        "properties": {
+          "uid": {
+            "type": "string"
+          },
+          "to": {
+            "type": "string"
+          },
+          "from": {
+            "type": "string",
+            "nullable": true
+          },
+          "message": {
+            "type": "string"
+          },
+          "customer_status": {
+            "type": "string",
+            "nullable": true,
+            "description": "The latest status we hold for this message."
+          },
+          "cost": {
+            "type": "string",
+            "nullable": true,
+            "description": "Credits used."
+          }
+        }
+      },
+      "Group": {
+        "type": "object",
+        "required": [
+          "uid",
+          "name"
+        ],
+        "properties": {
+          "uid": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "Contact": {
+        "type": "object",
+        "required": [
+          "uid",
+          "phone",
+          "status"
+        ],
+        "properties": {
+          "uid": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "integer",
+            "format": "int64",
+            "example": 61404235133
+          },
+          "status": {
+            "type": "string",
+            "example": "subscribe",
+            "description": "`subscribe` or `unsubscribe`."
+          },
+          "custom_fields": {
+            "type": "object",
+            "description": "The group's fields by tag, such as FIRST_NAME and LAST_NAME.",
+            "additionalProperties": {
+              "type": "string",
+              "nullable": true
+            }
+          }
+        }
+      },
+      "ContactInput": {
+        "type": "object",
+        "additionalProperties": {
+          "type": "string",
+          "description": "Any custom field the group has, by its tag."
+        },
+        "properties": {
+          "PHONE": {
+            "type": "string",
+            "description": "Number in international format.",
+            "example": "61404235133"
+          },
+          "FIRST_NAME": {
+            "type": "string",
+            "example": "Jane"
+          },
+          "LAST_NAME": {
+            "type": "string",
+            "example": "Smith"
+          }
+        }
+      },
+      "ProfileResponse": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Success"
+          },
+          {
+            "type": "object",
+            "required": [
+              "data"
+            ],
+            "properties": {
+              "data": {
+                "$ref": "#/components/schemas/Profile"
+              }
+            }
+          }
+        ]
+      },
+      "BalanceResponse": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Success"
+          },
+          {
+            "type": "object",
+            "required": [
+              "data"
+            ],
+            "properties": {
+              "data": {
+                "$ref": "#/components/schemas/Balance"
+              }
+            }
+          }
+        ]
+      },
+      "BulkSendResult": {
+        "type": "array",
+        "description": "One entry per number, when `recipient` holds several.",
+        "items": {
+          "type": "object",
+          "required": [
+            "uid",
+            "to"
+          ],
+          "properties": {
+            "uid": {
+              "type": "string"
+            },
+            "to": {
+              "type": "string"
+            },
+            "from": {
+              "type": "string",
+              "nullable": true
+            },
+            "message": {
+              "type": "string"
+            },
+            "customer_status": {
+              "type": "string",
+              "nullable": true
+            },
+            "cost": {
+              "type": "string",
+              "nullable": true
+            },
+            "sms_count": {
+              "type": "integer"
+            }
+          }
+        }
+      },
+      "SendResponse": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Success"
+          },
+          {
+            "type": "object",
+            "required": [
+              "data"
+            ],
+            "properties": {
+              "data": {
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/SendResult"
+                  },
+                  {
+                    "$ref": "#/components/schemas/BulkSendResult"
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "MessageResponse": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Success"
+          },
+          {
+            "type": "object",
+            "required": [
+              "data"
+            ],
+            "properties": {
+              "data": {
+                "$ref": "#/components/schemas/Message"
+              }
+            }
+          }
+        ]
+      },
+      "GroupResponse": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Success"
+          },
+          {
+            "type": "object",
+            "required": [
+              "data"
+            ],
+            "properties": {
+              "data": {
+                "$ref": "#/components/schemas/Group"
+              }
+            }
+          }
+        ]
+      },
+      "ContactResponse": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Success"
+          },
+          {
+            "type": "object",
+            "required": [
+              "data"
+            ],
+            "properties": {
+              "data": {
+                "$ref": "#/components/schemas/Contact"
+              }
+            }
+          }
+        ]
+      },
+      "EmptyResponse": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Success"
+          },
+          {
+            "type": "object",
+            "required": [
+              "data"
+            ],
+            "properties": {
+              "data": {
+                "nullable": true,
+                "type": "object"
+              }
+            }
+          }
+        ]
+      },
+      "MessagePage": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Success"
+          },
+          {
+            "type": "object",
+            "required": [
+              "data"
+            ],
+            "properties": {
+              "data": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/Pagination"
+                  },
+                  {
+                    "type": "object",
+                    "required": [
+                      "data"
+                    ],
+                    "properties": {
+                      "data": {
+                        "type": "array",
+                        "items": {
+                          "$ref": "#/components/schemas/Message"
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "GroupPage": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Success"
+          },
+          {
+            "type": "object",
+            "required": [
+              "data"
+            ],
+            "properties": {
+              "data": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/Pagination"
+                  },
+                  {
+                    "type": "object",
+                    "required": [
+                      "data"
+                    ],
+                    "properties": {
+                      "data": {
+                        "type": "array",
+                        "items": {
+                          "$ref": "#/components/schemas/Group"
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "ContactPage": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Success"
+          },
+          {
+            "type": "object",
+            "required": [
+              "data"
+            ],
+            "properties": {
+              "data": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/Pagination"
+                  },
+                  {
+                    "type": "object",
+                    "required": [
+                      "data"
+                    ],
+                    "properties": {
+                      "data": {
+                        "type": "array",
+                        "items": {
+                          "$ref": "#/components/schemas/Contact"
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}
